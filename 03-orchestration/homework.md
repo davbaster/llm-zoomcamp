@@ -51,7 +51,7 @@ What is the approximate **output** token count for `multilingual_agent`?
 - 200-400 tokens
 - 500+ tokens
 
-![image](images/question3.jpg)
+![image](images/Question3.jpg)
 
 ## Question 4: Token usage — long summary
 
@@ -90,49 +90,3 @@ Based on what you learned in this module, for production workflows requiring det
 - Use only RAG without agents for better performance
 - Use web search tools exclusively to ensure current data
 
-## Learning in Public
-
-We encourage everyone to share what they learned. This is called "learning in public".
-
-Read more about the benefits [here](https://alexeyondata.substack.com/p/benefits-of-learning-in-public-and) and in the [course's learning in public guide](https://datatalks.club/docs/courses/zoomcamp-logistics/learning-in-public/).
-
-### Example post for LinkedIn
-
-Tag [@Alexey Grigorev](https://www.linkedin.com/in/agrigorev/) and [@DataTalksClub](https://www.linkedin.com/company/datatalks-club/) in your post - we'll like and comment to give your post more reach.
-
-```
-🚀 Module 3 of LLM Zoomcamp by @DataTalksClub complete!
-
-Just finished Module 3 - AI Orchestration with @Kestra. Learned how to:
-
-✅ Engineer context so the LLM gets the right information
-✅ Ground answers in real data with RAG
-✅ Build AI agents that decide which tools to call
-✅ Orchestrate multi-agent systems
-
-Here's my homework solution: <LINK>
-
-Following along with this amazing free course by @Alexey Grigorev - who else is learning to build with LLMs?
-
-You can sign up here: https://github.com/DataTalksClub/llm-zoomcamp/
-```
-
-### Example post for X
-
-```
-🤖 Module 3 of LLM Zoomcamp done!
-
-- AI orchestration with @kestra_io
-- Context engineering
-- RAG-grounded answers
-- AI agents & multi-agent systems
-
-My solution: <LINK>
-
-Free course by @Al_Grigor & @DataTalksClub: https://github.com/DataTalksClub/llm-zoomcamp/
-```
-
-## Submitting the Solutions
-
-* Form for submitting: https://courses.datatalks.club/llm-zoomcamp-2026/homework/hw3
-* Check the link above to see the due date
