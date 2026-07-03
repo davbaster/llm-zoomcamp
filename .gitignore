@@ -12,3 +12,6 @@ wheels/
 
 #folders
 models/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
