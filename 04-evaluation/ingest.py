@@ -8,8 +8,7 @@ def load_faq_data():
     courses_raw = response.json()
 
     documents = []
-    #url_prefix = 'https://datatalks.club/faq'
-    url_prefix = 'https://raw.githubusercontent.com/DataTalksClub/llm-zoomcamp/main'
+    url_prefix = 'https://datatalks.club/faq'
 
     for course in courses_raw:
         course_url = f'{url_prefix}{course["path"]}'
