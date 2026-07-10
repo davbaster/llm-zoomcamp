@@ -88,5 +88,5 @@ Based on what you learned in this module, for production workflows requiring det
 - Always use AI agents for maximum flexibility and adaptation
 - (X) Use traditional task-based workflows for predictability and auditability
 - Use only RAG without agents for better performance
-- Use web search tools exclusively to ensure current data
+- Use web search tools exclusively to ensure current data.
 
