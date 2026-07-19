@@ -17,3 +17,11 @@ postgres: network
 		-p 5432:5432 \
 		-v pgdata:/var/lib/postgresql/data \
 		postgres:17
+
+grafana: 
+	docker run -d \
+		--name grafana \
+		--network monitoring \
+		-p 3000:3000 \
+		-v grafana_data:/var/lib/grafana \
+		grafana/grafana
