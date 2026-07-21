@@ -3,3 +3,9 @@
 [runtime]
 log_level="WARNING"  # the system log level of dlt
 # use the dlthub_telemetry setting to enable/disable anonymous usage data reporting, see https://dlthub.com/docs/reference/telemetry
+dlthub_telemetry = true
+workspace_id = "632e4c33-b5c4-4f49-b33d-3f7a66388850"
+organization_id = "d8006181-6e75-4b13-9b68-58472ba0e148"
+
+[workspace.settings]
+name = "llm_zoomcamp"
