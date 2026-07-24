@@ -11,7 +11,7 @@ def load_data():
 
 def build_index_keyword(documents):
     index = Index(
-        text_fields=["title", "studios", "genres","type", "synopsis"],
+        text_fields=["title", "title_english", "studios", "genres", "synopsis", "source"],
         keyword_fields=["mal_id"]
     )
     index.fit(documents)

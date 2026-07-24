@@ -13,9 +13,12 @@ user_input = st.text_input("Enter your question:")
 if st.button("Ask"):
     with st.spinner("Processing..."):
         #recommendation = assistant.rag(user_input)
-        answer = assistant.search(user_input)
+        answer, recommendation  = assistant.rag(user_input)
         st.success("Completed!")
-        st.dataframe(answer)
+        st.write("Answer:")
+        st.write(answer)
+        st.write("Recommended Animes that you might like:")
+        st.dataframe(recommendation)
 
         #record = assistant.last_call
         #st.write(f"Response time: {record.response_time:.2f}s")
