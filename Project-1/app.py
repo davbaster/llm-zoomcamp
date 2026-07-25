@@ -17,7 +17,7 @@ if st.button("Ask"):
         st.success("Completed!")
         st.write("Answer:")
         st.write(answer)
-        st.write("Recommended Animes that you might like:")
+        st.write("Other titles that you might like:")
         st.dataframe(recommendation)
 
         #record = assistant.last_call
