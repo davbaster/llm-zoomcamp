@@ -112,7 +112,7 @@ class RAGBase:
         self.model = model
 
     def search(self, query, num_results=5):
-        boost_dict = {'synopsis': 3.0, 'title': 1.5, 'title_english': 1.5, 'studios': 1.0, 'genres': 1.0, 'source': 1.0}
+        boost_dict = {'synopsis': 10.0, 'title': 0.5, 'title_english': 0.5, 'studios': 0, 'genres': 1.0, 'source': 1.0}
         filter_dict = {'genres': self.genre} if self.genre else {}
 
         return self.index.search(

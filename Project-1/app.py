@@ -1,49 +1,53 @@
+import os
+
+import requests
 import streamlit as st
-from assistant import create_assistant
 
-#from judge import evaluate_relevance
-#from db_feedback import save_feedback
 
-assistant = create_assistant()
+API_URL = os.getenv("ANIME_API_URL", "http://127.0.0.1:5000")
+
 
 st.title("Anime Recommendation Assistant")
 
 user_input = st.text_input("Enter your question:")
 
 if st.button("Ask"):
-    with st.spinner("Processing..."):
-        #recommendation = assistant.rag(user_input)
-        answer, recommendation  = assistant.rag(user_input)
-        st.success("Completed!")
-        st.write("Answer:")
-        st.write(answer)
-        st.write("Other titles that you might like:")
-        st.dataframe(recommendation)
+    if not user_input.strip():
+        st.warning("Enter a question first.")
+    else:
+        with st.spinner("Processing..."):
+            try:
+                response = requests.post(
+                    f"{API_URL.rstrip('/')}/recommend",
+                    json={"query": user_input.strip()},
+                    timeout=120,
+                )
+                response.raise_for_status()
+                st.session_state.recommendation_response = response.json()
+            except requests.RequestException as error:
+                st.error(
+                    "Could not reach the recommendation API. "
+                    "Make sure the Flask API is running."
+                )
+                st.caption(str(error))
+            except ValueError:
+                st.error("The recommendation API returned an invalid response.")
 
-        #record = assistant.last_call
-        #st.write(f"Response time: {record.response_time:.2f}s")
-        #st.write(f"Prompt tokens: {record.prompt_tokens}")
-        #st.write(f"Completion tokens: {record.completion_tokens}")
-        #st.write(f"Cost: ${record.cost:.4f}")
 
-        #conversation_id = save_conversation(record, user_input, "llm-zoomcamp")
-        #st.session_state.conversation_id = conversation_id
+response_data = st.session_state.get("recommendation_response")
 
-        #relevance, explanation = evaluate_relevance(user_input, answer)
-        #save_feedback(conversation_id, "judge",
-        #                relevance=relevance, explanation=explanation)
-        #st.write(f"Relevance: {relevance}")
-        #st.write(f"Explanation: {explanation}")
+if response_data:
+    st.success("Completed!")
+    st.write("Answer:")
+    st.write(response_data["answer"])
+    st.write("Other titles that you might like:")
+    st.dataframe(response_data["recommendations"])
 
-col1, col2 = st.columns(2)
-with col1:
-    if st.button("+1"):
-        #cid = st.session_state.conversation_id
-        #save_feedback(cid, "user", score=1)
-        st.write("Thanks!")
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("+1"):
+            st.write("Thanks!")
 
-with col2:
-    if st.button("-1"):
-        #cid = st.session_state.conversation_id
-        #save_feedback(cid, "user", score=-1)
-        st.write("Thanks for the feedback!")
+    with col2:
+        if st.button("-1"):
+            st.write("Thanks for the feedback!")
