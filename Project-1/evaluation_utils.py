@@ -1,8 +1,31 @@
-import time
-
+import json
+from time import time
 from tqdm.auto import tqdm
 from rag_helper import RAGBase
 
+evaluation_prompt_template = """
+You are an expert evaluator for a RAG system.
+Your task is to analyze the relevance of the generated answer to the given question.
+Based on the relevance of the generated answer, you will classify it
+as 'NON_RELEVANT', 'PARTLY_RELEVANT', or 'RELEVANT'.
+
+Here is the data for evaluation:
+
+Question: {question}
+Generated Answer: {answer}
+
+Please analyze the content and context of the generated answer in relation to the question
+and provide your evaluation in parsable JSON without using code blocks:
+
+{{
+  'Relevance': 'NON_RELEVANT' | 'PARTLY_RELEVANT' | 'RELEVANT',
+  'Explanation': '[Provide a brief explanation for your evaluation]'
+}}
+""".strip()
+
+
+
+#price calculation functions    
 
 def calc_price(usage):
     input_price_per_million = 0.20
@@ -12,7 +35,7 @@ def calc_price(usage):
     output_cost = (usage.output_tokens / 1_000_000) * output_price_per_million
     total_cost = input_cost + output_cost
 
-    return {
+    return  {
         "input_cost": input_cost,
         "output_cost": output_cost,
         "total_cost": total_cost,
@@ -28,6 +51,9 @@ def calc_total_price(usages):
 
     return total_cost
 
+
+
+#functions for structured LLM calls with retry logic
 
 def llm_structured(client, instructions, user_prompt, output_type, model="gpt-5.4-mini"):
     messages = [

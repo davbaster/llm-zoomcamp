@@ -60,6 +60,37 @@ OPENAI_API_KEY=your_api_key_here
 Add a `.gitignore` file and add .env file to avoid sending the key to your repository.
 Do not commit the `.env` file or expose the API key in source control.
 
+## PostgreSQL schema
+
+The database schema requires PostgreSQL with the `pgvector` extension available. Add these settings to `.env` when running PostgreSQL locally:
+
+```env
+POSTGRES_HOST=localhost
+POSTGRES_DB=anime_assistant
+POSTGRES_USER=user
+POSTGRES_PASSWORD=password
+EMBEDDING_MODEL=text-embedding-3-small
+EMBEDDING_DIMENSIONS=1536
+```
+
+`EMBEDDING_DIMENSIONS` must match the embedding model used during ingestion. The default, `1536`, matches OpenAI's `text-embedding-3-small` model.
+
+Create the tables and indexes with:
+
+```bash
+uv run python db_init.py
+```
+
+The initializer creates the anime catalog, full-text and vector indexes, conversations, feedback, and retrieval-tracking tables. The `init_db(drop=True)` function is intended only for local development because it deletes all application data.
+
+After initializing the database, generate embeddings and load the anime dataset with:
+
+```bash
+uv run python ingest.py --postgres
+```
+
+This calls the OpenAI Embeddings API and can incur API costs. To perform a small smoke-test ingestion first, use `uv run python ingest.py --postgres --limit 10`.
+
 ## Run the application
 
 The application consists of a Flask API and a Streamlit frontend. Run them in two terminals, both from the `Project-1` directory.

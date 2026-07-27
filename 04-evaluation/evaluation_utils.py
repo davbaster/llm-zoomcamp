@@ -78,9 +78,10 @@ class RAGWithUsage(RAGBase):
         self.usages = []
         self.last_usage = None
 
+
     def search(self, query, num_results=5):
-        boost_dict = {"question": 1.0, "answer": 2.0, "section": 0.1}
-        filter_dict = {"course": self.course}
+        boost_dict = {'synopsis': 10.0, 'title': 0.5, 'title_english': 0.5, 'studios': 0, 'genres': 1.0, 'source': 1.0}
+        filter_dict = {'genres': self.genre} if self.genre else {}
 
         return self.index.search(
             query,
