@@ -1,10 +1,4 @@
-#INSTRUCTIONS = '''
-#Your task is to recommend anime to users based on the provided context.
 
-#Use the context to find relevant information and provide accurate
-#recommendations. If no suitable recommendations are found in the context,
-#respond with "I don't have any recommendations based on the provided characteristics."
-#'''
 INSTRUCTIONS = '''
 
 You are a recommendation assistant for anime, manga, light novels, and webtoons.
@@ -83,6 +77,8 @@ Do not provide unsupported alternatives.
 
 
 '''
+
+
 
 
 PROMPT_TEMPLATE = '''
