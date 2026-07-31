@@ -1,7 +1,8 @@
 import uuid
 from flask import Flask, jsonify, request
 from assistant import create_assistant
-
+import db_save
+from judge import evaluate_relevance
 
 app = Flask(__name__)
 assistant = create_assistant()
@@ -35,7 +36,22 @@ def recommend():
 
     try:
         answer, recommendations = assistant.rag(query.strip())
+
+        #saving before calling judge to avoid destroying last call data
+        record = assistant.get_last_call()
         conversation_id = str(uuid.uuid4())
+
+        db_save.save_conversation(conversation_id, record, query.strip())
+
+        relevance, explanation = evaluate_relevance(query.strip(), answer)
+
+        db_save.save_judge_feedback(
+            conversation_id=conversation_id,
+            judge="judge",
+            relevance=relevance,
+            explanation=explanation
+        )
+
     except Exception:
         app.logger.exception("Recommendation request failed")
         return jsonify({"error": "Unable to generate recommendations."}), 500
@@ -49,22 +65,24 @@ def recommend():
         }
     )
 
-    @app.route("/feedback", methods=["POST"])
-    def handle_feedback():
-        data = request.json
-        conversation_id = data["conversation_id"]
-        feedback = data["feedback"]
+@app.route("/feedback", methods=["POST"])
+def handle_feedback():
+    data = request.json
+    conversation_id = data["conversation_id"]
+    feedback = data["feedback"]
 
-        if not conversation_id or feedback not in [1, -1]:
-            return jsonify({"error": "Invalid input"}), 400
+    if not conversation_id or feedback not in [1, -1]:
+        return jsonify({"error": "Invalid input"}), 400
 
 
-        #db.save_feedback(
-        #    conversation_id=conversation_id,
-        #    feedback=feedback,
-        #)
+    db_save.save_user_feedback(
+        conversation_id=conversation_id,
+        judge="user",
+        relevance=feedback,
+        explanation="user feedback"#TODO: Add explanation field to the feedback form and pass it here
+    )
 
-        return jsonify({"message": f"Feedback received: {feedback}"})
+    return jsonify({"message": f"Feedback received: {feedback}"})
 
 if __name__ == "__main__":
     app.run(host="127.0.0.1", port=5000, debug=True)

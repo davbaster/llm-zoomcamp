@@ -4,6 +4,7 @@ from sqlitesearch import TextSearchIndex
 from dotenv import load_dotenv
 from openai import OpenAI
 
+from Project.metrics import RAGWithMetrics
 from ingest import load_data, build_index_keyword
 from rag_helper import RAGBase
 
@@ -18,10 +19,26 @@ def create_assistant():
         db_path="./data/anime.db"
     )
 
-    return RAGBase(
+    return RAGWithMetrics(
         index=index,
         llm_client=OpenAI()
     )
+
+#it should return the last call made to the assistant, 
+# including the answer, the prompt, the instructions, 
+# the model, the tokens used, the response time, and the cost
+def last_call(assistant):
+    return {
+        "answer": assistant.answer,
+        "prompt": assistant.prompt,
+        "instructions": assistant.instructions,
+        "model": assistant.model,
+        "prompt_tokens": assistant.prompt_tokens,
+        "completion_tokens": assistant.completion_tokens,
+        "total_tokens": assistant.total_tokens,
+        "response_time": assistant.response_time,
+        "cost": assistant.cost
+    }
 
 #need to close the db index when the assistant is no longer needed to free up resources
 def close_assistant(assistant):

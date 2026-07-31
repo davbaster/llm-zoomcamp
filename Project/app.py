@@ -72,12 +72,26 @@ if response_data:
     col1, col2 = st.columns(2)
     with col1:
         if st.button("+1"):
-            #cid = st.session_state.conversation_id
+            try:
+                response = requests.post(
+
+                    f"{API_URL}/feedback",
+                    json={"conversation_id": st.session_state.conversation_id, "feedback": 1},
+                    timeout=120,
+                )
+                response.raise_for_status()
+                st.session_state.recommendation_response = response.json()                
+                cid = st.session_state.conversation_id
+                #save_feedback(cid, "user", score=1)
+                st.write("Thanks for the feedback!")
+            except AttributeError:
+                st.error("Conversation ID not found.")
+            cid = st.session_state.conversation_id
             #save_feedback(cid, "user", score=1)
             st.write("Thanks!")
 
     with col2:
         if st.button("-1"):
-            #cid = st.session_state.conversation_id
+            cid = st.session_state.conversation_id
             #save_feedback(cid, "user", score=-1)
             st.write("Thanks for the feedback!")

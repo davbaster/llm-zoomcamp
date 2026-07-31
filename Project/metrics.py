@@ -88,3 +88,6 @@ class RAGWithMetrics(RAGBase):
     
         print(call_record)
         self.last_call = call_record
+
+    def get_last_call(self):
+        return self.last_call
