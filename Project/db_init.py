@@ -21,7 +21,7 @@ def get_db_connection():
     )
 
 
-def init_db(drop=False):
+def init_db(drop=True):
     """Create the catalog, retrieval, monitoring, and feedback schema.
 
     Set drop=True only for a local development reset. This deletes all
@@ -37,6 +37,7 @@ def init_db(drop=False):
 
                 cur.execute("DROP TABLE IF EXISTS feedback")
                 cur.execute("DROP TABLE IF EXISTS conversations")
+                cur.execute("DROP TABLE IF EXISTS anime")
 
 
             cur.execute(
@@ -73,9 +74,9 @@ def init_db(drop=False):
                 """
                 CREATE TABLE IF NOT EXISTS conversations (
                     id BIGSERIAL PRIMARY KEY,
+                    conversation_id TEXT NOT NULL UNIQUE,
                     question TEXT NOT NULL,
                     answer TEXT NOT NULL,
-                    mal_id INTEGER NOT NULL,
                     model TEXT NOT NULL,
                     instructions TEXT NOT NULL,
                     prompt TEXT NOT NULL,
@@ -92,16 +93,60 @@ def init_db(drop=False):
                 """
                 CREATE TABLE IF NOT EXISTS feedback (
                     id BIGSERIAL PRIMARY KEY,
-                    conversation_id INTEGER NOT NULL REFERENCES conversations(id)
+                    conversation_id TEXT NOT NULL REFERENCES conversations(conversation_id)
                         ON DELETE CASCADE,
                     source TEXT NOT NULL CHECK (source IN ('user', 'judge')),
                     relevance TEXT,
                     explanation TEXT,
                     score SMALLINT CHECK (score IN (-1, 1)),
-                    timestamp TIMESTAMP WITH TIME ZONE NOT NULL
+                    timestamp TIMESTAMP WITH TIME ZONE NOT NULL,
+                    CONSTRAINT feedback_conversation_source_key UNIQUE (conversation_id, source)
                 )
             
         """)
+
+            # Databases created by an earlier version used a unique constraint
+            # on conversation_id alone. A conversation needs one judge verdict
+            # and one user vote, so uniqueness belongs to the pair instead.
+            cur.execute(
+                "ALTER TABLE feedback DROP CONSTRAINT IF EXISTS feedback_conversation_id_key"
+            )
+            cur.execute(
+                """
+                DO $$
+                BEGIN
+                    IF NOT EXISTS (
+                        SELECT 1
+                        FROM pg_constraint
+                        WHERE conrelid = 'feedback'::regclass
+                          AND conname = 'feedback_conversation_source_key'
+                    ) THEN
+                        ALTER TABLE feedback
+                        ADD CONSTRAINT feedback_conversation_source_key
+                        UNIQUE (conversation_id, source);
+                    END IF;
+                END $$;
+                """
+            )
+            cur.execute(
+                """
+                DO $$
+                BEGIN
+                    IF NOT EXISTS (
+                        SELECT 1
+                        FROM pg_constraint
+                        WHERE conrelid = 'feedback'::regclass
+                          AND conname = 'feedback_conversation_id_fkey'
+                    ) THEN
+                        ALTER TABLE feedback
+                        ADD CONSTRAINT feedback_conversation_id_fkey
+                        FOREIGN KEY (conversation_id)
+                        REFERENCES conversations(conversation_id)
+                        ON DELETE CASCADE;
+                    END IF;
+                END $$;
+                """
+            )
         conn.commit()
     finally:
         conn.close()

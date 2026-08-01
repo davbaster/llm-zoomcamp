@@ -34,7 +34,7 @@ if st.button("Ask"):
                 )
                 response.raise_for_status()
                 st.session_state.recommendation_response = response.json()
-
+                st.session_state.conversation_id = st.session_state.recommendation_response.get("conversation_id")
 
                 #record = assistant.last_call
                 #st.write(f"Response time: {record.response_time:.2f}s")
@@ -76,22 +76,43 @@ if response_data:
                 response = requests.post(
 
                     f"{API_URL}/feedback",
-                    json={"conversation_id": st.session_state.conversation_id, "feedback": 1},
+                    json={"conversation_id": response_data["conversation_id"], "feedback": 1},
                     timeout=120,
                 )
+                #TODO: response feedback should receive a 200ok.
+                #no answer should be received.
                 response.raise_for_status()
-                st.session_state.recommendation_response = response.json()                
-                cid = st.session_state.conversation_id
-                #save_feedback(cid, "user", score=1)
-                st.write("Thanks for the feedback!")
-            except AttributeError:
-                st.error("Conversation ID not found.")
-            cid = st.session_state.conversation_id
-            #save_feedback(cid, "user", score=1)
-            st.write("Thanks!")
+                if response.status_code == 200:
+                    st.success("Feedback submitted successfully.")
+                else:
+                    st.error(f"Unexpected response from the API: {response.status_code}")
+
+            except requests.RequestException as error:
+                st.error(
+                    "Could not connect to the feedback API. Please ensure the API is running and accessible."
+                    f"Error code: {error}")
+                st.caption(str(error))
+            
 
     with col2:
         if st.button("-1"):
-            cid = st.session_state.conversation_id
-            #save_feedback(cid, "user", score=-1)
-            st.write("Thanks for the feedback!")
+            try:
+                response = requests.post(
+
+                    f"{API_URL}/feedback",
+                    json={"conversation_id": response_data["conversation_id"], "feedback": -1},
+                    timeout=120,
+                )
+                #TODO: response feedback should receive a 200ok.
+                #no answer should be received.
+                response.raise_for_status()
+                if response.status_code == 200:
+                    st.success("Feedback submitted successfully.")
+                else:
+                    st.error(f"Unexpected response from the API: {response.status_code}")
+
+            except requests.RequestException as error:
+                st.error(
+                    "Could not connect to the feedback API. Please ensure the API is running and accessible."
+                    f"Error code: {error}")
+                st.caption(str(error))

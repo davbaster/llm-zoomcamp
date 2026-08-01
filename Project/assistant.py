@@ -4,7 +4,7 @@ from sqlitesearch import TextSearchIndex
 from dotenv import load_dotenv
 from openai import OpenAI
 
-from Project.metrics import RAGWithMetrics
+from metrics import RAGWithMetrics
 from ingest import load_data, build_index_keyword
 from rag_helper import RAGBase
 

@@ -40,14 +40,13 @@ def recommend():
         #saving before calling judge to avoid destroying last call data
         record = assistant.get_last_call()
         conversation_id = str(uuid.uuid4())
-
+        print("uuid generated: " + conversation_id)
         db_save.save_conversation(conversation_id, record, query.strip())
 
         relevance, explanation = evaluate_relevance(query.strip(), answer)
 
         db_save.save_judge_feedback(
             conversation_id=conversation_id,
-            judge="judge",
             relevance=relevance,
             explanation=explanation
         )
@@ -65,24 +64,31 @@ def recommend():
         }
     )
 
+
+#conversation_id is used to identify the conversation in the db
+# , and feedback is 1 for relevant and -1 for non-relevant
+#conversation_id is used two times in the feedback table, 
+# first to save the feedback provided by the judge, and 
+# second to save the feedback provided by the user 
+# Therefore, conversation_id cannot be unique in the feedback table,
+#  and it should be used to identify the conversation in the db
 @app.route("/feedback", methods=["POST"])
 def handle_feedback():
-    data = request.json
-    conversation_id = data["conversation_id"]
-    feedback = data["feedback"]
+    data = request.get_json(silent=True) or {}
+    conversation_id = data.get("conversation_id")
+    feedback = data.get("feedback")
 
-    if not conversation_id or feedback not in [1, -1]:
+    if not conversation_id or type(feedback) is not int or feedback not in [1, -1]:
         return jsonify({"error": "Invalid input"}), 400
 
 
     db_save.save_user_feedback(
         conversation_id=conversation_id,
-        judge="user",
-        relevance=feedback,
+        score=feedback,
         explanation="user feedback"#TODO: Add explanation field to the feedback form and pass it here
     )
 
-    return jsonify({"message": f"Feedback received: {feedback}"})
+    return jsonify({"message": f"Feedback received: {feedback}"}), 200
 
 if __name__ == "__main__":
     app.run(host="127.0.0.1", port=5000, debug=True)

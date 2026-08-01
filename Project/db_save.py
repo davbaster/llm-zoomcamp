@@ -23,7 +23,7 @@ def save_conversation(conversation_id, record, question, timestamp=None):
                 ) VALUES (
                     %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
                 )
-                RETURNING id
+                RETURNING conversation_id
                 """,
                 (
                     conversation_id,
@@ -47,7 +47,7 @@ def save_conversation(conversation_id, record, question, timestamp=None):
     return conversation_id
 
 #save judge feedback function
-def save_judge_feedback(conversation_id, judge, relevance, explanation):
+def save_judge_feedback(conversation_id, relevance, explanation):
     timestamp = datetime.now(DB_TIMEZONE)
 
     conn = get_db_connection()
@@ -60,18 +60,20 @@ def save_judge_feedback(conversation_id, judge, relevance, explanation):
                 ) VALUES (
                     %s, %s, %s, %s, %s
                 )
+                ON CONFLICT (conversation_id, source) DO UPDATE
+                SET relevance = EXCLUDED.relevance,
+                    explanation = EXCLUDED.explanation,
+                    timestamp = EXCLUDED.timestamp
                 """,
-                (conversation_id, judge, relevance, explanation, timestamp),
+                (conversation_id, "judge", relevance, explanation, timestamp),
             )
         conn.commit()
     finally:
         conn.close()
 
 #save feedback function
-def save_user_feedback(conversation_id, judge, relevance, explanation):
+def save_user_feedback(conversation_id, score, explanation):
     timestamp = datetime.now(DB_TIMEZONE)
-
-    relevance_str = "RELEVANT" if relevance == 1 else "NON_RELEVANT"
 
     conn = get_db_connection()
     try:
@@ -79,12 +81,16 @@ def save_user_feedback(conversation_id, judge, relevance, explanation):
             cur.execute(
                 """
                 INSERT INTO feedback (
-                    conversation_id, judge, relevance, explanation, timestamp
+                    conversation_id, source, score, explanation, timestamp
                 ) VALUES (
                     %s, %s, %s, %s, %s
                 )
+                ON CONFLICT (conversation_id, source) DO UPDATE
+                SET score = EXCLUDED.score,
+                    explanation = EXCLUDED.explanation,
+                    timestamp = EXCLUDED.timestamp
                 """,
-                (conversation_id, judge, relevance_str, explanation, timestamp),
+                (conversation_id, "user", score, explanation, timestamp),
             )
         conn.commit()
     finally:
