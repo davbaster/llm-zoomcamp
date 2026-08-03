@@ -1,6 +1,17 @@
 # Anime Recommendation Assistant
 
-This project is an anime recommendation assistant powered by a retrieval-augmented generation (RAG) agent. Users describe the kind of story they want to watch or read, and the assistant returns recommendations based on the catalogue.
+## Problem and RAG flow
+
+This project solves the problem of finding anime recommendations from a large catalogue using natural-language descriptions. Users can describe the story, genre, setting, characters, or tone they want, and the assistant returns recommendations grounded in the catalogue instead of relying only on the LLM's general knowledge.
+
+The application follows a retrieval-augmented generation (RAG) flow:
+
+1. A user submits a question through Streamlit.
+2. The Flask API searches the local anime knowledge base for relevant titles.
+3. The retrieved titles are added to the LLM prompt as context.
+4. The LLM writes the recommendation using that context.
+5. The API saves the conversation, evaluates the answer with a judge, and accepts user feedback.
+6. Grafana queries the stored monitoring data from PostgreSQL.
 
 ## Dataset
 
@@ -41,11 +52,38 @@ The ingestion process is implemented in [`ingest.py`](ingest.py). It prepares th
 
 This is an offline preparation step: Docker Compose uses the existing `data/anime.db` at runtime and does not rebuild the index on every startup. If the catalogue changes, run the ingestion process again to regenerate the local index.
 
+From the `Project` directory, the ingestion script can be run with:
+
+```bash
+python ingest.py
+```
+
 ## Evaluation and parameter tuning
 
 To measure the quality of retrieval, I created a gold-truth dataset in [`data/ground_truth-mal-2.csv`](data/ground_truth-mal-2.csv). It contains generated recommendation questions and the `mal_id` of the catalogue document that should be retrieved for each question. The dataset contains five questions for each of the 500 catalogue records used in the experiment, for a total of 2,500 evaluation questions.
 
 I used [`Generating_ground_truth.ipynb`](Generating_ground_truth.ipynb) to generate the questions, test different prompts and generation settings, and prepare the evaluation data. This project uses "fine-tuning" to mean application-level prompt and parameter tuning; the model weights themselves were not retrained.
+
+## Evaluation criteria
+
+The following rubric is used to evaluate the project. The evidence column describes the current implementation and makes it easier to review.
+
+| Criterion | 0 points | 1 point | 2 points | Current evidence |
+| --- | --- | --- | --- | --- |
+| Problem description | The problem is not described. | The problem is described briefly or unclearly. | The problem is well described and the project solution is clear. | The problem and solution are described above. |
+| Retrieval flow | No knowledge base or LLM is used. | No knowledge base is used and the LLM is queried directly. | Both a knowledge base and an LLM are used. | SQLite keyword retrieval provides context to the LLM. |
+| Retrieval evaluation | No retrieval evaluation is provided. | Only one retrieval approach is evaluated. | Multiple retrieval approaches are evaluated and the best is used. | Gold-truth data is prepared; retrieval metrics and comparison of multiple approaches are still to be documented. |
+| LLM evaluation | No final-output evaluation is provided. | Only one approach or prompt is evaluated. | Multiple approaches are evaluated and the best is used. | A judge evaluates relevance and stores verdicts; multiple-prompt comparison is not yet documented. |
+| Interface | No way to interact with the application. | CLI, script, or notebook only. | UI, web application, or API is provided. | Streamlit UI and Flask API are available. |
+| Ingestion pipeline | No ingestion. | Semi-automated ingestion with a notebook or Python script. | Automated ingestion with a tool such as Kestra, dlt, Airflow, or Prefect. | `ingest.py` provides Python-script ingestion into SQLite. |
+| Monitoring | No monitoring. | User feedback or a monitoring dashboard exists. | User feedback and a dashboard with at least five charts exist. | PostgreSQL stores feedback and Grafana provides the monitoring dashboard. |
+| Containerization | No containerization. | Dockerfile for the main app or Compose for dependencies only. | Everything runs in Docker Compose. | PostgreSQL, API, Streamlit, Grafana, and dashboard provisioning are defined in Compose. |
+| Reproducibility | Instructions, data, or access are missing. | Instructions are incomplete, or versions/data are not fully reproducible. | Instructions and data are clear, easy to run, and all dependency versions are specified. | Dataset and setup instructions are included; dependency ranges should be pinned for a fully reproducible score. |
+| Hybrid search | Not implemented. | — | 1 bonus point for combining and evaluating text and vector search. | Not implemented; the current system uses keyword search. |
+| Document re-ranking | Not implemented. | — | 1 bonus point for document re-ranking. | Not implemented. |
+| User query rewriting | Not implemented. | — | 1 bonus point for query rewriting. | Not implemented. |
+| Cloud deployment | Not deployed. | — | 2 bonus points for cloud deployment. | Not implemented. |
+| Other bonus | No additional bonus. | — | Up to 3 extra points for clearly documented additional work. | No additional bonus claimed. |
 
 The Docker Compose setup starts:
 
@@ -143,6 +181,19 @@ If you changed the Grafana values in `.env`, use those values instead.
 
 ![Streamlit assistant](images/streamlit-assistant.png)
 
+The API response includes the generated answer, a conversation ID, and a list of catalogue recommendations:
+
+```json
+{
+  "query": "Can you recommend a fantasy anime with a clever main character?",
+  "answer": "...generated recommendation...",
+  "conversation_id": "...",
+  "recommendations": [
+    {"title": "...", "genres": "...", "synopsis": "..."}
+  ]
+}
+```
+
 
 5. Select **+1** or **-1** to submit feedback.
 
@@ -152,7 +203,7 @@ Each request is saved in PostgreSQL. The agent also evaluates the answer and sto
 
 ## 5. View Grafana monitoring
 
-Open Grafana at `http://localhost:3000` and open the **Fitness assistant** dashboard.
+Open Grafana at `http://localhost:3000` and open the **Anime assistant** dashboard.
 
 The dashboard is provisioned automatically and includes:
 
@@ -239,3 +290,7 @@ docker compose logs grafana-init
 ```
 
 The dashboard will show more useful data after users ask questions and submit feedback.
+
+## Conclusion
+
+The current evaluation shows that approximately 50% of the generated answers meet our quality expectations. This gives us a useful baseline and also shows that there is room for improvement. In a future version, we hope to add vector search and combine it with the current keyword search through a hybrid retrieval approach. Better retrieval should provide more relevant context to the LLM and improve the quality of the final recommendations.

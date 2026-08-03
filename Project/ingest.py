@@ -1,11 +1,17 @@
 import sys
 import time
+from pathlib import Path
 
 import pandas as pd
 from sqlitesearch import TextSearchIndex
 
+
+PROJECT_DIR = Path(__file__).resolve().parent
+DATA_DIR = PROJECT_DIR / "data"
+
+
 def load_data():
-    df = pd.read_csv("c:/DATA/Cursos/llm-zoomcamp/Project-1/top_anime_dataset.csv")
+    df = pd.read_csv(DATA_DIR / "top_anime_dataset.csv")
     df = df.fillna("Not Available")
 
     return df.to_dict(orient="records")
@@ -15,7 +21,7 @@ def build_index_keyword(documents):
     index = TextSearchIndex(
         text_fields=["title", "title_english", "studios", "genres", "synopsis", "source"],
         keyword_fields=["mal_id"],
-        db_path="./data/anime.db"
+        db_path=str(DATA_DIR / "anime.db")
     )
 
     for doc in documents:
@@ -33,7 +39,7 @@ if __name__ == "__main__":
     index = TextSearchIndex(
         text_fields=["title", "title_english", "studios", "genres", "synopsis", "source"],
         keyword_fields=["mal_id"],
-        db_path="./data/anime.db"
+        db_path=str(DATA_DIR / "anime.db")
     )
 
     query = "I want to watch animes from Production I.G. Can you recommend one?"
