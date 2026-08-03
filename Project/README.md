@@ -9,11 +9,26 @@ The Docker Compose setup starts:
 - Streamlit for the user interface
 - Grafana for monitoring conversations, feedback, cost, tokens, models, and response time
 
-![Project architecture](images/architecture.png)
+
+
+## Project Architecture
+
+The project separates recommendation, observability, and presentation so each part has one clear responsibility:
+
+- **SQLite + keyword search for the catalogue.** The anime dataset is stored locally in `data/anime.db` and queried through `TextSearchIndex`. This keeps retrieval lightweight and easy to run for a small, read-mostly catalogue.
+- **Flask API for the RAG agent.** The API owns the recommendation workflow: retrieve relevant titles, call the LLM, evaluate the answer, and record the result. Keeping this logic behind an API means the interface can stay simple and other clients can use the agent later.
+- **Streamlit for the user experience.** Streamlit only collects questions, displays recommendations, and submits thumbs-up or thumbs-down feedback to the API.
+- **PostgreSQL for operational data.** Conversations, token usage, response time, cost, judge verdicts, and user feedback are stored in PostgreSQL. This data is relational, changes over time, and is well suited to SQL analysis.
+- **Grafana for monitoring.** Grafana reads PostgreSQL directly to show request quality, cost, latency, token usage, and feedback without adding monitoring logic to the application request path.
+- **Docker Compose for local integration.** Compose gives each service a stable internal name such as `api` and `postgres`, while named volumes retain PostgreSQL and Grafana data between restarts.
+
+The current retrieval layer is keyword-based. A future version can add vector search alongside it for hybrid retrieval when semantic matching becomes necessary.
+
+
 
 ## Requirements
 
-- Docker Desktop with Docker Compose
+- Docker Desktop with Docker Compose, or docker engine.
 - An OpenAI API key
 
 ## 1. Configure the environment
@@ -70,7 +85,7 @@ Password: admin
 
 If you changed the Grafana values in `.env`, use those values instead.
 
-![Streamlit assistant](images/streamlit-assistant.png)
+
 
 ## 4. Ask a question
 
@@ -78,12 +93,18 @@ If you changed the Grafana values in `.env`, use those values instead.
 2. Enter an anime request, for example:
 
    ```text
-   Recommend a fantasy anime with strong world-building and a clever main character.
+   can you recommend anything about reviving in another world?
    ```
 
 3. Click **Ask**.
 4. Review the answer and recommendations.
+
+![Streamlit assistant](images/streamlit-assistant.png)
+
+
 5. Select **+1** or **-1** to submit feedback.
+
+![Giving Feedback in the app](images/streamlit-assistant-feedback.png)
 
 Each request is saved in PostgreSQL. The agent also evaluates the answer and stores a judge relevance result.
 
