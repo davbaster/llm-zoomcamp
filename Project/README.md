@@ -29,6 +29,24 @@ The recommendation agent uses `data/top_anime_dataset.csv`, a catalogue of anime
 | `studios` | Animation or production studios. |
 | `url` | Link to the title's MyAnimeList page. |
 
+## Ingestion pipeline
+
+The ingestion process is implemented in [`ingest.py`](ingest.py). It prepares the catalogue before the recommendation agent is used:
+
+1. `load_data()` reads `data/top_anime_dataset.csv` with pandas and replaces missing values.
+2. The rows are converted into dictionaries so they can be indexed as documents.
+3. `build_index_keyword()` creates a SQLite-backed `TextSearchIndex` at `data/anime.db`.
+4. The index stores searchable fields such as title, English title, synopsis, genres, studios, and source, while `mal_id` is used as the keyword identifier.
+5. The persisted index is loaded by `assistant.py` when the API or Streamlit application starts.
+
+This is an offline preparation step: Docker Compose uses the existing `data/anime.db` at runtime and does not rebuild the index on every startup. If the catalogue changes, run the ingestion process again to regenerate the local index.
+
+## Evaluation and parameter tuning
+
+To measure the quality of retrieval, I created a gold-truth dataset in [`data/ground_truth-mal-2.csv`](data/ground_truth-mal-2.csv). It contains generated recommendation questions and the `mal_id` of the catalogue document that should be retrieved for each question. The dataset contains five questions for each of the 500 catalogue records used in the experiment, for a total of 2,500 evaluation questions.
+
+I used [`Generating_ground_truth.ipynb`](Generating_ground_truth.ipynb) to generate the questions, test different prompts and generation settings, and prepare the evaluation data. This project uses "fine-tuning" to mean application-level prompt and parameter tuning; the model weights themselves were not retrained.
+
 The Docker Compose setup starts:
 
 - PostgreSQL for conversations and feedback
@@ -92,7 +110,6 @@ docker compose up --build
 
 The first startup may take a few minutes while Docker downloads images and installs Python dependencies.
 
-![Docker Compose startup](images/docker-compose-startup.png)
 
 ## 3. Open the application
 
