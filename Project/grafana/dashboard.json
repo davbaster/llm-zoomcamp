@@ -1,0 +1,759 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "target": {
+          "limit": 100,
+          "matchAny": false,
+          "tags": [],
+          "type": "dashboard"
+        },
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 1,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "fJMbpi3Iz"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto",
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "f"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 196
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "t"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 204
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 17,
+        "x": 3,
+        "y": 0
+      },
+      "id": 12,
+      "options": {
+        "footer": {
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "9.3.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "BmSh7SuIk"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT c.timestamp AS time, c.conversation_id, c.question, c.answer, c.model, c.response_time, c.cost, j.relevance AS judge_relevance, u.score AS user_score FROM conversations c LEFT JOIN feedback j ON j.conversation_id = c.conversation_id AND j.source = 'judge' LEFT JOIN feedback u ON u.conversation_id = c.conversation_id AND u.source = 'user' WHERE c.timestamp BETWEEN $__timeFrom() AND $__timeTo() ORDER BY c.timestamp DESC LIMIT 5",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Last 5 conversations",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "fJMbpi3Iz"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "id": 14,
+      "options": {
+        "displayLabels": [
+          "percent"
+        ],
+        "legend": {
+          "displayMode": "list",
+          "placement": "right",
+          "showLegend": true,
+          "values": []
+        },
+        "pieType": "pie",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "BmSh7SuIk"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT CASE WHEN score = 1 THEN 'Thumbs up' ELSE 'Thumbs down' END AS feedback, COUNT(*) AS count FROM feedback WHERE source = 'user' AND score IS NOT NULL AND timestamp BETWEEN $__timeFrom() AND $__timeTo() GROUP BY CASE WHEN score = 1 THEN 'Thumbs up' ELSE 'Thumbs down' END",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "User feedback",
+      "type": "piechart"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "fJMbpi3Iz"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "unit": "percent",
+          "thresholds": {
+            "mode": "percentage",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 70
+              },
+              {
+                "color": "red",
+                "value": 85
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "id": 4,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [],
+          "fields": "",
+          "values": true
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      },
+      "pluginVersion": "9.3.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "BmSh7SuIk"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COALESCE(ROUND(100.0 * COUNT(*) FILTER (WHERE relevance = 'RELEVANT') / NULLIF(COUNT(*), 0), 2), 0) AS value FROM feedback WHERE source = 'judge' AND timestamp BETWEEN $__timeFrom() AND $__timeTo()",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Relevant answers (%)",
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "fJMbpi3Iz"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "currencyUSD",
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "id": 10,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "BmSh7SuIk"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT timestamp AS time, cost FROM conversations WHERE timestamp BETWEEN $__timeFrom() AND $__timeTo() ORDER BY timestamp",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "LLM cost",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "fJMbpi3Iz"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "short",
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "id": 8,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "BmSh7SuIk"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT timestamp AS time, prompt_tokens, completion_tokens, total_tokens FROM conversations WHERE timestamp BETWEEN $__timeFrom() AND $__timeTo() ORDER BY timestamp",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Token usage",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "fJMbpi3Iz"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 24
+      },
+      "id": 6,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "right",
+          "showLegend": true
+        },
+        "orientation": "horizontal",
+        "showValue": "never",
+        "stacking": "none",
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "BmSh7SuIk"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT model, COUNT(*) AS count FROM conversations WHERE timestamp BETWEEN $__timeFrom() AND $__timeTo() GROUP BY model ORDER BY count DESC",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Requests by model",
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "fJMbpi3Iz"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "unit": "s",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 24
+      },
+      "id": 2,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "BmSh7SuIk"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT timestamp AS time, response_time FROM conversations WHERE timestamp BETWEEN $__timeFrom() AND $__timeTo() ORDER BY timestamp",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Response time (seconds)",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 37,
+  "style": "dark",
+  "tags": [],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Fitness assistant",
+  "uid": "QTaWhmqSz",
+  "version": 2,
+  "weekStart": ""
+}

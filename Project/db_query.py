@@ -23,10 +23,9 @@ def get_conversations(limit=10):
         with conn.cursor() as cur:
             cur.execute(
                 """
-                SELECT id, question, answer, mal_id, model,
-                       instructions, prompt,
-                       prompt_tokens, completion_tokens, total_tokens,
-                       response_time, cost, timestamp
+                SELECT id, conversation_id, question, answer, model,
+                       instructions, prompt, prompt_tokens, completion_tokens, 
+                       total_tokens, response_time, cost, timestamp
                 FROM conversations
                 ORDER BY timestamp DESC
                 LIMIT %s
