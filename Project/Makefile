@@ -5,6 +5,12 @@ volume:
 	docker volume create anime
 	docker volume create grafana_data
 
+volume_rm:
+	docker volume rm project_grafana_data
+	docker volume rm project_anime
+	
+	
+
 # Ejecuta la base de datos PostgreSQL en un contenedor Docker usando el volumen
 postgres: volume
 	docker run --rm \

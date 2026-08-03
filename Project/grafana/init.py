@@ -1,6 +1,7 @@
 import os
 import json
 from pathlib import Path
+from urllib.parse import quote
 import requests
 
 try:
@@ -212,18 +213,13 @@ def create_dashboard(api_key, datasource_uid):
 
     print("Dashboard JSON loaded successfully.")
 
-    # Update datasource UID in the dashboard JSON
-    panels_updated = 0
-    for panel in dashboard_json.get("panels", []):
-        if isinstance(panel.get("datasource"), dict):
-            panel["datasource"]["uid"] = datasource_uid
-            panels_updated += 1
-        elif isinstance(panel.get("targets"), list):
-            for target in panel["targets"]:
-                if isinstance(target.get("datasource"), dict):
-                    target["datasource"]["uid"] = datasource_uid
-                    panels_updated += 1
+    if dashboard_json.get("kind") == "Dashboard" and isinstance(
+        dashboard_json.get("spec"), dict
+    ):
+        return create_v2_dashboard(dashboard_json, api_key, datasource_uid)
 
+    # Legacy dashboard JSON has panels at the root.
+    panels_updated = replace_datasource_references(dashboard_json, datasource_uid)
     print(f"Updated datasource UID for {panels_updated} panels/targets.")
 
     # Remove server-managed fields, but keep the UID so reruns overwrite the
@@ -256,6 +252,105 @@ def create_dashboard(api_key, datasource_uid):
     else:
         print(f"Failed to create dashboard: {grafana_error(response)}")
         return None
+
+
+def replace_datasource_references(value, datasource_uid):
+    """Replace datasource references in either legacy or v2 dashboard JSON."""
+    updated = 0
+
+    if isinstance(value, dict):
+        datasource = value.get("datasource")
+        if isinstance(datasource, dict):
+            if "uid" in datasource:
+                datasource["uid"] = datasource_uid
+                updated += 1
+            elif "name" in datasource and datasource["name"] != "-- Grafana --":
+                # In the v2 dashboard schema, datasource.name contains the UID.
+                datasource["name"] = datasource_uid
+                updated += 1
+
+        for child in value.values():
+            updated += replace_datasource_references(child, datasource_uid)
+
+    elif isinstance(value, list):
+        for child in value:
+            updated += replace_datasource_references(child, datasource_uid)
+
+    return updated
+
+
+def create_v2_dashboard(dashboard_json, api_key, datasource_uid):
+    """Provision a Kubernetes-format dashboard through Grafana's v2 API."""
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+    }
+
+    api_version = dashboard_json.get("apiVersion", "dashboard.grafana.app/v2")
+    api_version_name = api_version.rsplit("/", 1)[-1]
+    metadata = dashboard_json.get("metadata", {})
+    namespace = metadata.get("namespace", "default")
+    dashboard_name = metadata.get("name") or dashboard_json["spec"].get("uid")
+
+    if not dashboard_name:
+        print("Failed to provision v2 dashboard: metadata.name is missing")
+        return None
+
+    panels_updated = replace_datasource_references(
+        dashboard_json["spec"], datasource_uid
+    )
+    print(f"Updated datasource references in {panels_updated} v2 elements.")
+
+    # Only send client-owned metadata. Grafana owns uid, generation,
+    # resourceVersion, timestamps, and generated annotations/labels.
+    clean_metadata = {
+        "name": dashboard_name,
+        "namespace": namespace,
+    }
+    folder_uid = metadata.get("annotations", {}).get("grafana.app/folder")
+    if folder_uid:
+        clean_metadata["annotations"] = {"grafana.app/folder": folder_uid}
+
+    payload = {
+        "apiVersion": api_version,
+        "kind": "Dashboard",
+        "metadata": clean_metadata,
+        "spec": dashboard_json["spec"],
+    }
+
+    base_url = (
+        f"{GRAFANA_URL}/apis/dashboard.grafana.app/{api_version_name}"
+        f"/namespaces/{quote(namespace, safe='')}/dashboards"
+    )
+    dashboard_url = f"{base_url}/{quote(dashboard_name, safe='')}"
+
+    print("Updating v2 dashboard...")
+    response = requests.put(
+        dashboard_url,
+        headers=headers,
+        json=payload,
+        timeout=10,
+    )
+
+    if response.status_code == 404:
+        print("v2 dashboard does not exist; creating it")
+        response = requests.post(
+            base_url,
+            headers=headers,
+            json=payload,
+            timeout=10,
+        )
+
+    print(f"Response status code: {response.status_code}")
+    print(f"Response content: {response.text}")
+
+    if response.status_code in (200, 201):
+        print("v2 dashboard created or updated successfully")
+        return response.json().get("metadata", {}).get("name", dashboard_name)
+
+    print(f"Failed to create or update v2 dashboard: {grafana_error(response)}")
+    return None
 
 
 def main():
