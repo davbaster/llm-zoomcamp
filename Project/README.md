@@ -1,6 +1,33 @@
 # Anime Recommendation Assistant
 
-This project is an anime recommendation assistant powered by a retrieval-augmented generation (RAG) agent.
+This project is an anime recommendation assistant powered by a retrieval-augmented generation (RAG) agent. Users describe the kind of story they want to watch or read, and the assistant returns recommendations based on the catalogue.
+
+## Dataset
+
+The recommendation agent uses `data/top_anime_dataset.csv`, a catalogue of anime titles and metadata used by the local keyword-search index. The dataset contains one row per title and the following columns. The source dataset is available on [Kaggle](https://www.kaggle.com/datasets/muhammadaqeelkabir/top-anime-csv).
+
+| Column | Description |
+| --- | --- |
+| `mal_id` | Unique MyAnimeList identifier. |
+| `title` | Original title of the anime. |
+| `title_english` | English title, when available. |
+| `type` | Format, such as TV, movie, OVA, or special. |
+| `source` | Original source material, such as manga, novel, or original. |
+| `episodes` | Number of episodes. |
+| `status` | Release status, such as Finished Airing or Currently Airing. |
+| `airing` | Whether the anime is currently airing. |
+| `rating` | Audience or age rating. |
+| `score` | Average user score. |
+| `scored_by` | Number of users who submitted a score. |
+| `rank` | Ranking based on the user score. |
+| `popularity` | Popularity ranking. |
+| `members` | Number of users who have added the title to their list. |
+| `favorites` | Number of users who marked the title as a favorite. |
+| `synopsis` | Plot summary or description. |
+| `year` | Release year, when available. |
+| `genres` | Genres associated with the title. |
+| `studios` | Animation or production studios. |
+| `url` | Link to the title's MyAnimeList page. |
 
 The Docker Compose setup starts:
 
@@ -9,7 +36,7 @@ The Docker Compose setup starts:
 - Streamlit for the user interface
 - Grafana for monitoring conversations, feedback, cost, tokens, models, and response time
 
-
+![Project architecture](images/architecture.png)
 
 ## Project Architecture
 
@@ -23,8 +50,6 @@ The project separates recommendation, observability, and presentation so each pa
 - **Docker Compose for local integration.** Compose gives each service a stable internal name such as `api` and `postgres`, while named volumes retain PostgreSQL and Grafana data between restarts.
 
 The current retrieval layer is keyword-based. A future version can add vector search alongside it for hybrid retrieval when semantic matching becomes necessary.
-
-
 
 ## Requirements
 
