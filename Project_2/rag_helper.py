@@ -73,9 +73,6 @@ class RAGBase:
         for doc in search_results:
             lines.append('chunk_id: ' + str(doc['chunk_id']))
             lines.append('text: ' + doc['text'])
-            lines.append('volume: ' + doc['volume']) 
-            lines.append('chapter: ' + doc['chapter'])
-            lines.append('section: ' + doc['section'])
             lines.append('')
 
         return '\n'.join(lines).strip()
